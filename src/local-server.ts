@@ -20,9 +20,12 @@ const app = createApp(localEnv);
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-serve({
-  fetch: app.fetch,
-  port: port,
-}, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+serve(
+	{
+		fetch: app.fetch,
+		port: port
+	},
+	() => {
+		console.log(`Server is running on http://localhost:${port}`);
+	}
+);

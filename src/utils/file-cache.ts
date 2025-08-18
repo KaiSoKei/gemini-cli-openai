@@ -1,10 +1,10 @@
-import fs from 'fs/promises';
-import path from 'path';
+import fs from "fs/promises";
+import path from "path";
 
-const cacheFilePath = path.join(process.cwd(), '.cache.json');
+const cacheFilePath = path.join(process.cwd(), ".cache.json");
 
 interface Cache {
-  [key: string]: unknown;
+	[key: string]: unknown;
 }
 
 let memoryCache: Cache | null = null;
@@ -32,8 +32,8 @@ async function readCache(): Promise<Cache> {
 }
 
 async function writeCache(cache: Cache): Promise<void> {
-  await fs.writeFile(cacheFilePath, JSON.stringify(cache, null, 2));
-  memoryCache = cache;
+	await fs.writeFile(cacheFilePath, JSON.stringify(cache, null, 2));
+	memoryCache = cache;
 }
 
 export const fileCache: KVNamespace = {
@@ -81,7 +81,6 @@ export const fileCache: KVNamespace = {
 		return { value: null, metadata: null };
 	}
 };
-
 
 // --- KVNamespace Interface (for compatibility with Cloudflare Workers) ---
 // This is a simplified version of the Cloudflare KVNamespace interface.
