@@ -4,7 +4,7 @@ import path from 'path';
 const cacheFilePath = path.join(process.cwd(), '.cache.json');
 
 interface Cache {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 let memoryCache: Cache | null = null;
