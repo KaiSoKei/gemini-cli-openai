@@ -17,9 +17,13 @@
     "docker:clean": "docker-compose down -v && docker system prune -f",
     "docker:logs": "docker-compose logs -f gemini-worker",
     "docker:shell": "docker-compose exec gemini-worker sh",
-    "tsc": "tsc --noEmit --skipLibCheck"
+    "tsc": "tsc --noEmit --skipLibCheck",
+    "build:local": "tsc --module commonjs --outDir dist",
+    "start:local": "node dist/local-server.js"
   },
   "dependencies": {
+    "@hono/node-server": "^1.18.2",
+    "dotenv": "^17.2.1",
     "hono": "^4.9.0"
   },
   "devDependencies": {
