@@ -8,14 +8,14 @@ WORKDIR /app
 # Copy package files
 COPY package*.json yarn.lock* ./
 
+# Install dependencies
+RUN yarn install --production=false
+
 # Copy application code
 COPY . .
 
 # List files for debugging
 RUN ls -la
-
-# Install dependencies
-RUN yarn install --production=false
 
 # Build the local server
 RUN yarn build:local
