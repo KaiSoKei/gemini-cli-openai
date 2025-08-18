@@ -5,7 +5,7 @@ import path from 'path';
 const cacheFilePath = path.join(process.cwd(), '.cache.json');
 
 interface Cache {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 let memoryCache: Cache | null = null;
@@ -18,8 +18,13 @@ async function readCache(): Promise<Cache> {
     const data = await fs.readFile(cacheFilePath, 'utf-8');
     memoryCache = JSON.parse(data);
     return memoryCache as Cache;
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: unknown }).code === 'ENOENT'
+    ) {
       return {}; // Return empty object if file doesn't exist
     }
     throw error;
@@ -32,18 +37,18 @@ async function writeCache(cache: Cache): Promise<void> {
 }
 
 export const fileCache = {
-  async get(key: string, type?: 'json'): Promise<any> {
+  async get<T = unknown>(key: string, type?: 'json'): Promise<T | null> {
     const cache = await readCache();
     const value = cache[key] ?? null;
     if (type === 'json' && typeof value === 'string') {
       try {
-        return JSON.parse(value);
+        return JSON.parse(value) as T;
       } catch (e) {
         // Ignore if not valid JSON
-        return value;
+        return value as T;
       }
     }
-    return value;
+    return value as T | null;
   },
 
   async put(key: string, value: any, options?: { expirationTtl?: number }): Promise<void> {
