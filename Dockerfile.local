@@ -1,0 +1,27 @@
+# Dockerfile for local Node.js server
+
+FROM node:20-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json yarn.lock* ./
+
+# Copy application code
+COPY . .
+
+# List files for debugging
+RUN ls -la
+
+# Install dependencies
+RUN yarn install --production=false
+
+# Build the local server
+RUN yarn build:local
+
+# Expose the local server port
+EXPOSE 3000
+
+# Command to run the local server
+CMD ["node", "dist/local-server.js"]

@@ -34,6 +34,20 @@ services:
       retries: 3
       start_period: 10s
 
+  gemini-worker-local:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: gemini-cli-worker-local
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .dev.vars
+    restart: unless-stopped
+
 # Named volumes for data persistence
 volumes:
   gemini_storage_data:

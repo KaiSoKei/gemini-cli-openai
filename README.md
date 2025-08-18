@@ -150,43 +150,44 @@ npm run deploy
 npm run dev
 ```
 
-### Running Locally
+### Local Development with Docker
 
-There are two ways to run this project :
+For a consistent and isolated local development environment, you can use the provided Docker setup. This will build a container with all the necessary dependencies and run the local Node.js server.
 
-#### 1. Cloudflare Worker Development (Default)
+**Step 1: Configure Environment Variables**
 
-This method uses the Wrangler CLI to simulate the Cloudflare environment locally. It requires the setup steps (1-3) to be completed, including creating a KV namespace.
+The Docker setup uses a `.dev.vars` file to manage environment variables. This file is ignored by Git, so you can safely store your credentials in it.
+
+1.  **Create the `.dev.vars` file:**
+
+    ```bash
+    cp .dev.vars.example .dev.vars
+    ```
+
+2.  **Edit `.dev.vars`:**
+
+    Open the newly created `.dev.vars` file and fill in the required values:
+
+    -   `GCP_SERVICE_ACCOUNT`: Your JSON credentials for Google Cloud Platform.
+    -   `OPENAI_API_KEY`: Your OpenAI API key (optional, but recommended).
+
+**Step 2: Build and Run the Container**
+
+Once you have configured your environment variables, you can build and run the Docker container using `docker-compose`:
 
 ```bash
-# Run the local Cloudflare development server
-npm run dev
+docker-compose up gemini-worker-local --build
 ```
 
-#### 2. Standalone Node.js Server (No Cloudflare)
+This command will:
 
-This method runs the worker as a standard Node.js application, completely independent of the Cloudflare infrastructure. It's useful for offline development or if you don't want to set up a Cloudflare account.
+-   Build the Docker image using `Dockerfile.local`.
+-   Start a container named `gemini-cli-worker-local`.
+-   Mount your local source code into the container for hot-reloading.
 
-1.  **Create a `.env` file**: If you haven't already, copy the `.dev.vars.example` file to a new file named `.env`.
-    ```bash
-    cp .dev.vars.example .env
-    ```
-2.  **Configure Credentials**: Open the `.env` file and paste your `GCP_SERVICE_ACCOUNT` JSON credentials.
-3.  **Install Dependencies**:
-    ```bash
-    npm install
-    # or
-    yarn install
-    ```
-4.  **Build and Run**:
-    ```bash
-    # Build the local server code
-    npm run build:local
+**Step 3: Accessing the Server**
 
-    # Start the local server
-    npm run start:local
-    ```
-    The server will be available at `http://localhost:3000` by default.
+The local server will be available at `http://localhost:3000`.
 
 ## 🔧 Configuration
 
