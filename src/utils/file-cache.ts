@@ -18,8 +18,13 @@ async function readCache(): Promise<Cache> {
     const data = await fs.readFile(cacheFilePath, 'utf-8');
     memoryCache = JSON.parse(data);
     return memoryCache as Cache;
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: unknown }).code === 'ENOENT'
+    ) {
       return {}; // Return empty object if file doesn't exist
     }
     throw error;
