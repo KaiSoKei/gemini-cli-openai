@@ -191,18 +191,18 @@ export class GenerationConfigValidator {
 		const tools = [];
 		let toolConfig = {};
 
-		// Recursive function to deep-filter keys starting with '
+		// Recursive function to deep-filter keys starting with '$' (removes internal/system keys)
 
-		const deepFilter = (obj: any): any => {
+		const deepFilter = (obj: unknown): unknown => {
 			if (Array.isArray(obj)) {
 				return obj.map(deepFilter);
 			}
 			if (obj && typeof obj === "object") {
-				return Object.keys(obj)
+				return Object.keys(obj as Record<string, unknown>)
 					.filter((key) => !key.startsWith("$"))
 					.reduce(
 						(acc, key) => {
-							acc[key] = deepFilter(obj[key]);
+							acc[key] = deepFilter((obj as Record<string, unknown>)[key]);
 							return acc;
 						},
 						{} as Record<string, unknown>
