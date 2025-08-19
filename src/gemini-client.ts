@@ -19,6 +19,7 @@ import { AutoModelSwitchingHelper } from "./helpers/auto-model-switching";
 import { NativeToolsManager } from "./helpers/native-tools-manager";
 import { CitationsProcessor } from "./helpers/citations-processor";
 import { GeminiUrlContextMetadata, GroundingMetadata, NativeToolsRequestParams } from "./types/native-tools";
+import { Readable } from 'stream';
 
 // Gemini API response types
 interface GeminiCandidate {
@@ -298,7 +299,50 @@ export class GeminiApiClient {
 	/**
 	 * Stream content from Gemini API.
 	 */
-	async *streamContent(
+	streamContent(
+		modelId: string,
+		systemPrompt: string,
+		messages: ChatMessage[],
+		options?: {
+			includeReasoning?: boolean;
+			thinkingBudget?: number;
+			tools?: Tool[];
+			tool_choice?: ToolChoice;
+			max_tokens?: number;
+			temperature?: number;
+			top_p?: number;
+			stop?: string | string[];
+			presence_penalty?: number;
+			frequency_penalty?: number;
+			seed?: number;
+			response_format?: {
+				type: "text" | "json_object";
+			};
+		} & NativeToolsRequestParams
+	): Readable {
+		const stream = new Readable({
+			read() {},
+		});
+
+		(async () => {
+			for await (const chunk of this.streamContentGenerator(
+				modelId,
+				systemPrompt,
+				messages,
+				options
+			)) {
+				stream.push(JSON.stringify(chunk));
+			}
+			stream.push(null);
+		})();
+
+		return stream;
+	}
+
+	/**
+	 * Stream content from Gemini API.
+	 */
+	async *streamContentGenerator(
 		modelId: string,
 		systemPrompt: string,
 		messages: ChatMessage[],
@@ -760,7 +804,7 @@ export class GeminiApiClient {
 			const tool_calls: Array<{ id: string; type: "function"; function: { name: string; arguments: string } }> = [];
 
 			// Collect all chunks from the stream
-			for await (const chunk of this.streamContent(modelId, systemPrompt, messages, options)) {
+			for await (const chunk of this.streamContentGenerator(modelId, systemPrompt, messages, options)) {
 				if (chunk.type === "text" && typeof chunk.data === "string") {
 					content += chunk.data;
 				} else if (chunk.type === "usage" && typeof chunk.data === "object") {
@@ -792,7 +836,7 @@ export class GeminiApiClient {
 					systemPrompt,
 					messages,
 					options,
-					this.streamContent.bind(this)
+					this.streamContentGenerator.bind(this)
 				);
 				if (fallbackResult) {
 					return fallbackResult;

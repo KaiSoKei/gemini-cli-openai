@@ -1,3 +1,4 @@
+import { Transform } from 'stream';
 import { StreamChunk, ReasoningData, GeminiFunctionCall, UsageData } from "./types";
 import { NativeToolResponse } from "./types/native-tools";
 import { OPENAI_CHAT_COMPLETION_OBJECT } from "./config";
@@ -81,25 +82,27 @@ function isNativeToolResponse(data: unknown): data is NativeToolResponse {
  * Creates a TransformStream to convert Gemini's output chunks
  * into OpenAI-compatible server-sent events.
  */
-export function createOpenAIStreamTransformer(model: string): TransformStream<StreamChunk, Uint8Array> {
+export function createOpenAIStreamTransformer(model: string): Transform {
 	const chatID = `chatcmpl-${crypto.randomUUID()}`;
 	const creationTime = Math.floor(Date.now() / 1000);
-	const encoder = new TextEncoder();
 	let firstChunk = true;
 	let toolCallId: string | null = null;
 	let toolCallName: string | null = null;
 	let usageData: UsageData | undefined;
 
-	return new TransformStream({
-		transform(chunk, controller) {
+	return new Transform({
+        objectMode: true,
+		transform(chunk, encoding, callback) {
+            const chunkString = chunk.toString();
+            const chunkObject = JSON.parse(chunkString) as StreamChunk;
 			const delta: OpenAIDelta = {};
 			let openAIChunk: OpenAIChunk | null = null;
 
-			switch (chunk.type) {
+			switch (chunkObject.type) {
 				case "text":
 				case "thinking_content":
-					if (typeof chunk.data === "string") {
-						delta.content = chunk.data;
+					if (typeof chunkObject.data === "string") {
+						delta.content = chunkObject.data;
 						if (firstChunk) {
 							delta.role = "assistant";
 							firstChunk = false;
@@ -107,18 +110,18 @@ export function createOpenAIStreamTransformer(model: string): TransformStream<St
 					}
 					break;
 				case "real_thinking":
-					if (typeof chunk.data === "string") {
-						delta.reasoning = chunk.data;
+					if (typeof chunkObject.data === "string") {
+						delta.reasoning = chunkObject.data;
 					}
 					break;
 				case "reasoning":
-					if (isReasoningData(chunk.data)) {
-						delta.reasoning = chunk.data.reasoning;
+					if (isReasoningData(chunkObject.data)) {
+						delta.reasoning = chunkObject.data.reasoning;
 					}
 					break;
 				case "tool_code":
-					if (isGeminiFunctionCall(chunk.data)) {
-						const toolData = chunk.data;
+					if (isGeminiFunctionCall(chunkObject.data)) {
+						const toolData = chunkObject.data;
 						toolCallName = toolData.name;
 						toolCallId = `call_${crypto.randomUUID()}`;
 						delta.tool_calls = [
@@ -140,18 +143,18 @@ export function createOpenAIStreamTransformer(model: string): TransformStream<St
 					}
 					break;
 				case "native_tool":
-					if (isNativeToolResponse(chunk.data)) {
-						delta.native_tool_calls = [chunk.data];
+					if (isNativeToolResponse(chunkObject.data)) {
+						delta.native_tool_calls = [chunkObject.data];
 					}
 					break;
 				case "grounding_metadata":
-					if (chunk.data) {
-						delta.grounding = chunk.data;
+					if (chunkObject.data) {
+						delta.grounding = chunkObject.data;
 					}
 					break;
 				case "usage":
-					if (isUsageData(chunk.data)) {
-						usageData = chunk.data;
+					if (isUsageData(chunkObject.data)) {
+						usageData = chunkObject.data;
 					}
 					return; // Don't send a chunk for usage data
 			}
@@ -173,10 +176,11 @@ export function createOpenAIStreamTransformer(model: string): TransformStream<St
 					],
 					usage: null
 				};
-				controller.enqueue(encoder.encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
+				this.push(`data: ${JSON.stringify(openAIChunk)}\n\n`);
 			}
+            callback();
 		},
-		flush(controller) {
+		flush(callback) {
 			const finishReason = toolCallId ? "tool_calls" : "stop";
 			const finalChunk: OpenAIFinalChunk = {
 				id: chatID,
@@ -190,12 +194,13 @@ export function createOpenAIStreamTransformer(model: string): TransformStream<St
 				finalChunk.usage = {
 					prompt_tokens: usageData.inputTokens,
 					completion_tokens: usageData.outputTokens,
-					total_tokens: usageData.inputTokens + usageData.outputTokens
+				total_tokens: usageData.inputTokens + usageData.outputTokens
 				};
 			}
 
-			controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalChunk)}\n\n`));
-			controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+			this.push(`data: ${JSON.stringify(finalChunk)}\n\n`);
+			this.push("data: [DONE]\n\n");
+            callback();
 		}
 	});
 }
