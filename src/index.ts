@@ -17,8 +17,5 @@ const localEnv: Partial<Env> = {
 
 const app = createApp(localEnv);
 
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
+// Export the app for Vercel
+export default app;
