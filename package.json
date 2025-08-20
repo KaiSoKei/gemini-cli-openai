@@ -4,8 +4,6 @@
   "private": true,
   "main": "dist/index.js", 
   "scripts": {
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
     "build": "tsc --module commonjs --outDir dist",
