@@ -2,7 +2,7 @@
   "name": "gemini-cli-worker",
   "version": "1.0.0",
   "private": true,
-  "main": "dist/index.js", 
+  "main": "api/index.ts", 
   "scripts": {
     "format": "prettier --write src",
     "format:check": "prettier --check src",
@@ -19,8 +19,8 @@
     "docker:shell": "docker-compose exec gemini-worker sh",
     "tsc": "tsc --noEmit --skipLibCheck",
     "build:local": "tsc --module commonjs --outDir dist",
-    "start": "node dist/index.js",
-    "start:local": "node dist/index.js"
+    "start": "node api/index.ts",
+    "start:local": "node api/index.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",
