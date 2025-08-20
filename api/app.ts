@@ -53,7 +53,8 @@ export const createApp = (customEnv?: Partial<Env>) => {
                     full_test: '/v1/test'
                 }
             },
-            documentation: 'https://github.com/gewoonjaap/gemini-cli-openai'
+            documentation: 'https://github.com/KaiSoKei/gemini-cli-openai/tree/NoHonoToExpressJs',
+            Author: 'https://github.com/KaiSoKei - (Original Creator: https://github.com/GewoonJaap/)'
         });
     });
 
