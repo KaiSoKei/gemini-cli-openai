@@ -18,4 +18,5 @@ const localEnv: Partial<Env> = {
 const app = createApp(localEnv);
 
 // Export the app for Vercel
-export default app;
+// api/index.js
+module.exports = app
